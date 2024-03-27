@@ -24,7 +24,7 @@ app.post("/", async (c) => {
 
   let msg = "";
   if (mrData.object_attributes.action === "open") {
-    msg = `New [Merge Request](${mrData.object_attributes.url}) created by ${mrData.user.username}.\n\nTitle: ${mrData.object_attributes.title}\nDescription: ${mrData.object_attributes.description}\n\nRandom assignee: @${users[random]}`;
+    msg = `**${mrData.user.username}** created new [Merge Request](${mrData.object_attributes.url}).\n\nTitle: ${mrData.object_attributes.title}\nDescription: ${mrData.object_attributes.description}\n\nRandom assignee: @${users[random]}`;
 
     await bot.telegram.sendMessage(process.env.CHANNEL_ID!, msg, {
       parse_mode: "Markdown",
