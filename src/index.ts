@@ -18,16 +18,20 @@ const bot = new Telegraf(process.env.BOT_TOKEN!);
 const app = new Hono();
 
 app.post("/", async (c) => {
-  const random = Math.floor(Math.random() * users.length);
   const mrData: MergeRequest = await c.req.json();
-  console.log(mrData);
+  if (mrData.object_attributes.action !== "open") {
+    return c.json(mrData);
+  }
 
+  const random = Math.floor(Math.random() * users.length);
   let msg = "";
   if (mrData.object_attributes.action === "open") {
     msg = `**${mrData.user.username}** created new [Merge Request](${mrData.object_attributes.url}).\n\nTitle: ${mrData.object_attributes.title}\nDescription: ${mrData.object_attributes.description}\n\nRandom assignee: @${users[random]}`;
-
-    await bot.telegram.sendMessage(process.env.CHANNEL_ID!, msg, {
-      parse_mode: "Markdown",
+    const channels = process.env.CHANNEL_ID!.split(";");
+    channels.forEach(async (channel) => {
+      await bot.telegram.sendMessage(channel, msg, {
+        parse_mode: "Markdown",
+      });
     });
   }
 
