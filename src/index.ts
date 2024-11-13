@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { Telegraf } from "telegraf";
@@ -31,7 +32,6 @@ const users = [
   "sauledossym",
   "Alibekqqqq",
   "hejfjfurjhn",
-  "Dahon13",
   "Miras199406",
   "addisonbk",
 ];
