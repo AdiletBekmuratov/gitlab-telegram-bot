@@ -63,34 +63,48 @@ bot.action("refresh_random", async (ctx) => {
 });
 
 app.post("/", async (c) => {
-  const mrData: MergeRequest = await c.req.json();
+  try {
+    const mrData: MergeRequest = await c.req.json();
+    console.log(mrData);
+    if (
+      mrData.object_attributes.action !== "open" &&
+      mrData.object_attributes.action !== "reopen"
+    ) {
+      return c.json(mrData);
+    }
 
-  if (
-    mrData.object_attributes.action !== "open" &&
-    mrData.object_attributes.action !== "reopen"
-  ) {
-    return c.json(mrData);
-  }
-
-  const random = getRandomUser(users, "");
-  let msg = "";
-  if (mrData.object_attributes.action === "open") {
-    msg = `<b>${mrData.user.username}</b> created new <b>Merge Request</b>.\n\nTitle: ${mrData.object_attributes.title}\nDescription: ${mrData.object_attributes.description}\n\nRandom assignee: @${random}`;
-    const channels = process.env.CHANNEL_ID!.split(";");
-    channels.forEach(async (channel) => {
-      await bot.telegram.sendMessage(channel, msg, {
-        parse_mode: "HTML",
-        reply_markup: {
-          inline_keyboard: [
-            [{ text: "Open Merge Request", url: mrData.object_attributes.url }],
-            [{ text: "Refresh Random User", callback_data: "refresh_random" }],
-          ],
-        },
+    const random = getRandomUser(users, "");
+    let msg = "";
+    if (mrData.object_attributes.action === "open") {
+      msg = `<b>${mrData.user.username}</b> created new <b>Merge Request</b>.\n\nTitle: ${mrData.object_attributes.title}\nDescription: ${mrData.object_attributes.description}\n\nRandom assignee: @${random}`;
+      const channels = process.env.CHANNEL_ID!.split(";");
+      channels.forEach(async (channel) => {
+        await bot.telegram.sendMessage(channel, msg, {
+          parse_mode: "HTML",
+          reply_markup: {
+            inline_keyboard: [
+              [
+                {
+                  text: "Open Merge Request",
+                  url: mrData.object_attributes.url,
+                },
+              ],
+              [
+                {
+                  text: "Refresh Random User",
+                  callback_data: "refresh_random",
+                },
+              ],
+            ],
+          },
+        });
       });
-    });
-  }
+    }
 
-  return c.json(mrData);
+    return c.json(mrData);
+  } catch (error) {
+    return c.json({ error: JSON.stringify(error, null, 2) });
+  }
 });
 
 bot.launch();
