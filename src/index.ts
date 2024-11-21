@@ -75,7 +75,10 @@ app.post("/", async (c) => {
 
     const random = getRandomUser(users, "");
     let msg = "";
-    if (mrData.object_attributes.action === "open") {
+    if (
+      mrData.object_attributes.action === "open" ||
+      mrData.object_attributes.action === "reopen"
+    ) {
       msg = `<b>${mrData.user.username}</b> created new <b>Merge Request</b>.\n\nTitle: ${mrData.object_attributes.title}\nDescription: ${mrData.object_attributes.description}\n\nRandom assignee: @${random}`;
       const channels = process.env.CHANNEL_ID!.split(";");
       channels.forEach(async (channel) => {
@@ -103,6 +106,13 @@ app.post("/", async (c) => {
 
     return c.json(mrData);
   } catch (error) {
+    const msg = `<b>Error</b>\n\n${JSON.stringify(error, null, 2)}`;
+    const channels = process.env.CHANNEL_ID!.split(";");
+    channels.forEach(async (channel) => {
+      await bot.telegram.sendMessage(channel, msg, {
+        parse_mode: "HTML",
+      });
+    });
     return c.json({ error: JSON.stringify(error, null, 2) });
   }
 });
