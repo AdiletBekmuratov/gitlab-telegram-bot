@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import "dotenv/config";
 import { serve } from "@hono/node-server";
 import { Hono } from "hono";
 import { Telegraf } from "telegraf";
@@ -64,7 +64,11 @@ bot.action("refresh_random", async (ctx) => {
 
 app.post("/", async (c) => {
   const mrData: MergeRequest = await c.req.json();
-  if (mrData.object_attributes.action !== "open") {
+
+  if (
+    mrData.object_attributes.action !== "open" &&
+    mrData.object_attributes.action !== "reopen"
+  ) {
     return c.json(mrData);
   }
 
