@@ -36,7 +36,9 @@ const users = [
   "addisonbk",
 ];
 
-const bot = new Telegraf(process.env.BOT_TOKEN!);
+const BOT_TOKEN = process.env.BOT_TOKEN || "";
+const CHANNEL_ID = process.env.CHANNEL_ID || "";
+const bot = new Telegraf(BOT_TOKEN);
 const app = new Hono();
 
 bot.action("refresh_random", async (ctx) => {
@@ -65,7 +67,6 @@ bot.action("refresh_random", async (ctx) => {
 app.post("/", async (c) => {
   try {
     const mrData: MergeRequest = await c.req.json();
-    console.log(mrData);
     if (
       mrData.object_attributes.action !== "open" &&
       mrData.object_attributes.action !== "reopen"
@@ -80,40 +81,40 @@ app.post("/", async (c) => {
       mrData.object_attributes.action === "reopen"
     ) {
       msg = `<b>${mrData.user.username}</b> created new <b>Merge Request</b>.\n\nTitle: ${mrData.object_attributes.title}\nDescription: ${mrData.object_attributes.description}\n\nRandom assignee: @${random}`;
-      const channels = process.env.CHANNEL_ID!.split(";");
-      channels.forEach(async (channel) => {
-        await bot.telegram.sendMessage(channel, msg, {
-          parse_mode: "HTML",
-          reply_markup: {
-            inline_keyboard: [
-              [
-                {
-                  text: "Open Merge Request",
-                  url: mrData.object_attributes.url,
-                },
+      const channels = CHANNEL_ID.split(";");
+      const promises = channels.map(async (channel) => {
+        try {
+          await bot.telegram.sendMessage(channel, msg, {
+            parse_mode: "HTML",
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Open Merge Request",
+                    url: mrData.object_attributes.url,
+                  },
+                ],
+                [
+                  {
+                    text: "Refresh Random User",
+                    callback_data: "refresh_random",
+                  },
+                ],
               ],
-              [
-                {
-                  text: "Refresh Random User",
-                  callback_data: "refresh_random",
-                },
-              ],
-            ],
-          },
-        });
+            },
+          });
+        } catch (error) {
+          console.log(error);
+          throw error;
+        }
       });
+      await Promise.allSettled(promises);
     }
 
     return c.json(mrData);
   } catch (error) {
-    const msg = `<b>Error</b>\n\n${JSON.stringify(error, null, 2)}`;
-    const channels = process.env.CHANNEL_ID!.split(";");
-    channels.forEach(async (channel) => {
-      await bot.telegram.sendMessage(channel, msg, {
-        parse_mode: "HTML",
-      });
-    });
-    return c.json({ error: JSON.stringify(error, null, 2) });
+    console.log(error);
+    throw error;
   }
 });
 
